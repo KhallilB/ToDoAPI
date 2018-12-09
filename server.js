@@ -3,24 +3,35 @@ const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const methodOverride = require("method-override");
-const exphbs = require("express-handlebars");
 
-const todos = require("./routes/todos");
-const auth = require("./routes/auth");
+const todos = require("./api/routes/todos");
+const users = require("./api/routes/users");
 
 const app = express();
 
 app.use(cors());
-app.engine("handlebars", exphbs({ defaultLayout: "main" }));
-app.set("view engine", "handlebars");
-app.use(bodyParser.urlencoded({ extended: "true" })); // parse application/x-www-form-urlencoded
-app.use(bodyParser.json()); // parse application/json
-app.use(bodyParser.json({ type: "application/vnd.api+json" })); // parse application/vnd.api+json as json
-app.use(methodOverride());
+app.use(bodyParser.urlencoded({ extended: "true" }));
+app.use(bodyParser.json());
+app.use(bodyParser.json({ type: "application/vnd.api+json" }));
+app.use(methodOverride("_method"));
 
-app.use("/", todos);
-app.use("/api", todos);
-app.use("/auth", auth);
+app.use("/todos", todos);
+app.use("/users", users);
+
+//Error Handling
+app.use((req, res) => {
+  const error = new Error("Not Found");
+  error.status("404");
+});
+
+app.use((error, req, res) => {
+  res.status(error.status || 500);
+  res.json({
+    error: {
+      message: error.message
+    }
+  });
+});
 
 mongoose.connect(
   "mongodb://localhost/ToDoAPI",
